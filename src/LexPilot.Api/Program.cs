@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using LexPilot.Infrastructure;
 using LexPilot.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -62,3 +62,4 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapGet("/health", () => Results.Ok(new { status = "ok", app = "LexPilot.Api" }));
 app.Run();
+
