@@ -1,0 +1,32 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: lexpilot_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: lexpilot
+      POSTGRES_USER: lexpilot
+      POSTGRES_PASSWORD: lexpilot_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - lexpilot_pgdata:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    container_name: lexpilot_api
+    depends_on:
+      - postgres
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=lexpilot;Username=lexpilot;Password=lexpilot_password
+      Jwt__Issuer: LexPilot
+      Jwt__Audience: LexPilotUsers
+      Jwt__Key: CHANGE_ME_SUPER_SECRET_KEY_32_CHARS_MINIMUM
+    ports:
+      - "5128:8080"
+
+volumes:
+  lexpilot_pgdata:
