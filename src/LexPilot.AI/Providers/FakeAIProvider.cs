@@ -2,22 +2,21 @@ using LexPilot.AI.Chat;
 
 namespace LexPilot.AI.Providers;
 
-public sealed class FakeAIProvider : IAIProvider
+public sealed class FakeAIProvider : BaseAIProvider
 {
-    public string Name => "Fake";
+    public override string Name => "Fake";
 
-    public Task<ChatResponse> SendAsync(ChatRequest request, CancellationToken cancellationToken)
+    public override Task<ChatResponse> SendAsync(ChatRequest request, CancellationToken cancellationToken)
     {
         var historyCount = request.History?.Count ?? 0;
 
-        var response = new ChatResponse
+        return Task.FromResult(new ChatResponse
         {
-            
+            ConversationId = request.ConversationId,
             Answer =
-                "LexPilot Copilot fonctionne actuellement avec le provider Fake. " +
+                "LexPilot Copilot fonctionne avec le provider Fake. " +
                 $"Message recu : \"{request.Message}\". " +
-                $"Historique disponible : {historyCount} message(s). " +
-                "Les providers OpenAI, Azure OpenAI et Ollama sont prepares pour les prochains lots.",
+                $"Historique disponible : {historyCount} message(s).",
             SuggestedActions =
             [
                 "Resumer le dossier",
@@ -25,9 +24,6 @@ public sealed class FakeAIProvider : IAIProvider
                 "Generer un courrier",
                 "Verifier les echeances"
             ]
-        };
-
-        return Task.FromResult(response);
+        });
     }
 }
-

@@ -27,10 +27,13 @@ public static class DependencyInjection
             services.Configure<AIProviderOptions>(_ => { });
         }
 
+        services.AddHttpClient<OpenAIProvider>();
+        services.AddHttpClient<AzureOpenAIProvider>();
+        services.AddHttpClient<OllamaProvider>();
+
         services.AddScoped<FakeAIProvider>();
-        services.AddScoped<OpenAIProvider>();
-        services.AddScoped<AzureOpenAIProvider>();
-        services.AddScoped<OllamaProvider>();
+        services.AddScoped<AnthropicProvider>();
+        services.AddScoped<GeminiProvider>();
 
         services.AddScoped<IAIProviderFactory, AIProviderFactory>();
 

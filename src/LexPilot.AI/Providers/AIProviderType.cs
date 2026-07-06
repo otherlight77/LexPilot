@@ -5,5 +5,7 @@ public enum AIProviderType
     Fake,
     OpenAI,
     AzureOpenAI,
-    Ollama
+    Ollama,
+    Anthropic,
+    Gemini
 }
