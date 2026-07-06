@@ -1,4 +1,4 @@
-﻿using LexPilot.AI;
+using LexPilot.AI;
 using LexPilot.Application.Common.Interfaces;
 using LexPilot.Application;
 using LexPilot.Api.Services.Clients;
@@ -10,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddApplication();
-builder.Services.AddLexPilotAI();
+builder.Services.AddLexPilotAI(builder.Configuration);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -49,6 +49,7 @@ app.MapGet("/", () => new
 });
 
 app.Run();
+
 
 
 

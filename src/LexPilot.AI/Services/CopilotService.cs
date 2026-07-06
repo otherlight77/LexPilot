@@ -1,20 +1,28 @@
-using LexPilot.AI.Agents;
 using LexPilot.AI.Chat;
+using LexPilot.AI.Providers;
 
 namespace LexPilot.AI.Services;
 
 public sealed class CopilotService : ICopilotService
 {
-    private readonly CopilotAgent _agent;
+    private readonly IAIProviderFactory _providerFactory;
 
-    public CopilotService(CopilotAgent agent)
+    public CopilotService(IAIProviderFactory providerFactory)
     {
-        _agent = agent;
+        _providerFactory = providerFactory;
     }
 
-    public Task<ChatResponse> SendAsync(ChatRequest request, CancellationToken cancellationToken)
+    public async Task<ChatResponse> SendAsync(ChatRequest request, CancellationToken cancellationToken)
     {
-        var response = _agent.GenerateStubResponse(request);
-        return Task.FromResult(response);
+        var provider = _providerFactory.GetProvider();
+
+        var response = await provider.SendAsync(request, cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(response.Answer))
+        {
+            response.Answer = "Le provider IA n'a retourne aucune reponse.";
+        }
+
+        return response;
     }
 }
