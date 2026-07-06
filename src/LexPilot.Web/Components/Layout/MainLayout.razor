@@ -1,4 +1,5 @@
-﻿@inherits LayoutComponentBase
+@using LexPilot.Web.Components.Copilot
+@inherits LayoutComponentBase
 
 <div class="lex-shell">
     <aside class="lex-sidebar">
@@ -37,23 +38,7 @@
     </main>
 
     <aside class="ai-panel">
-        <div class="ai-header">
-            <div class="ai-icon">🤖</div>
-            <div>
-                <strong>Assistant IA</strong>
-                <span>Disponible partout</span>
-            </div>
-        </div>
-
-        <button>Résumer un dossier</button>
-        <button>Générer un courrier</button>
-        <button>Analyser un PDF</button>
-        <button>Répondre à un mail</button>
-        <button>Préparer une audience</button>
-        <button>Rechercher une jurisprudence</button>
-
-        <div class="ai-note">
-            IA non connectée pour le moment. Interface prête pour le module IA.
-        </div>
+        <CopilotPanel />
     </aside>
 </div>
+

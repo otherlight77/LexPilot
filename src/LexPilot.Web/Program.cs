@@ -1,4 +1,5 @@
-﻿using LexPilot.Web.Features.Documents.Services;
+using LexPilot.Web.Features.Copilot.Services;
+using LexPilot.Web.Features.Documents.Services;
 using LexPilot.Web.Services.Api;
 using LexPilot.Web.Services.Notifications;
 using LexPilot.Web.Services.State;
@@ -23,6 +24,7 @@ builder.Services.AddScoped<DashboardApiService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<UserState>();
 builder.Services.AddScoped<DocumentApiService>();
+builder.Services.AddScoped<CopilotApiService>();
 
 var app = builder.Build();
 
@@ -44,6 +46,7 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.Run();
+
 
 
 

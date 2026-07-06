@@ -1,0 +1,127 @@
+@rendermode InteractiveServer
+@using LexPilot.Web.Features.Copilot.Models
+@using LexPilot.Web.Features.Copilot.Services
+@inject CopilotApiService CopilotApiService
+
+<div class="copilot-panel">
+    <div class="copilot-header">
+        <div class="copilot-icon">AI</div>
+        <div>
+            <strong>LexPilot Copilot</strong>
+            <span>Assistant cabinet</span>
+        </div>
+    </div>
+
+    <div class="copilot-intro">
+        Bonjour Jeremie.
+        <br />
+        Je peux aider a resumer un dossier, analyser un document, preparer un courrier ou verifier des echeances.
+    </div>
+
+    <div class="copilot-messages">
+        @foreach (var message in Messages)
+        {
+            <div class="copilot-message @(message.Author == "Vous" ? "user" : "assistant")">
+                <small>@message.Author</small>
+                <p>@message.Content</p>
+            </div>
+        }
+
+        @if (IsBusy)
+        {
+            <div class="copilot-message assistant">
+                <small>LexPilot</small>
+                <p>Analyse en cours...</p>
+            </div>
+        }
+    </div>
+
+    @if (SuggestedActions.Any())
+    {
+        <div class="copilot-actions">
+            @foreach (var action in SuggestedActions)
+            {
+                <button @onclick="() => UseSuggestion(action)">@action</button>
+            }
+        </div>
+    }
+
+    <div class="copilot-input">
+        <textarea placeholder="Pose une question au Copilot..."
+                  @bind="CurrentMessage"
+                  @bind:event="oninput"></textarea>
+
+        <button @onclick="SendMessage" disabled="@IsBusy">Envoyer</button>
+    </div>
+</div>
+
+@code {
+    private List<CopilotMessageItem> Messages = new();
+    private List<string> SuggestedActions = new()
+    {
+        "Resumer un dossier",
+        "Analyser un document",
+        "Generer un courrier"
+    };
+
+    private string CurrentMessage = string.Empty;
+    private bool IsBusy;
+
+    private async Task SendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(CurrentMessage))
+            return;
+
+        var userMessage = CurrentMessage.Trim();
+        CurrentMessage = string.Empty;
+
+        Messages.Add(new CopilotMessageItem
+        {
+            Author = "Vous",
+            Content = userMessage
+        });
+
+        IsBusy = true;
+
+        try
+        {
+            var response = await CopilotApiService.SendAsync(userMessage);
+
+            if (response is null)
+            {
+                Messages.Add(new CopilotMessageItem
+                {
+                    Author = "LexPilot",
+                    Content = "Je n'ai pas pu obtenir de reponse de l'API Copilot."
+                });
+            }
+            else
+            {
+                Messages.Add(new CopilotMessageItem
+                {
+                    Author = "LexPilot",
+                    Content = response.Answer
+                });
+
+                SuggestedActions = response.SuggestedActions;
+            }
+        }
+        catch (Exception ex)
+        {
+            Messages.Add(new CopilotMessageItem
+            {
+                Author = "LexPilot",
+                Content = "Erreur Copilot : " + ex.Message
+            });
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private void UseSuggestion(string action)
+    {
+        CurrentMessage = action;
+    }
+}
