@@ -10,7 +10,7 @@ public sealed class AzureOpenAIProvider : IAIProvider
     {
         var response = new ChatResponse
         {
-            ConversationId = request.ConversationId,
+            
             Answer =
                 "Provider Azure OpenAI pret mais non connecte. " +
                 "Ajoute endpoint, cle API et deployment dans la configuration pour activer ce provider.",
@@ -25,3 +25,4 @@ public sealed class AzureOpenAIProvider : IAIProvider
         return Task.FromResult(response);
     }
 }
+

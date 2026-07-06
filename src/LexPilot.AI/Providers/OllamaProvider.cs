@@ -10,7 +10,7 @@ public sealed class OllamaProvider : IAIProvider
     {
         var response = new ChatResponse
         {
-            ConversationId = request.ConversationId,
+            
             Answer =
                 "Provider Ollama pret mais non connecte. " +
                 "Installe Ollama localement et configure le modele pour activer l'IA locale.",
@@ -25,3 +25,4 @@ public sealed class OllamaProvider : IAIProvider
         return Task.FromResult(response);
     }
 }
+

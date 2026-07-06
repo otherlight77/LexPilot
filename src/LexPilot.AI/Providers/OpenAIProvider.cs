@@ -10,7 +10,7 @@ public sealed class OpenAIProvider : IAIProvider
     {
         var response = new ChatResponse
         {
-            ConversationId = request.ConversationId,
+            
             Answer =
                 "Provider OpenAI pret mais non connecte. " +
                 "Ajoute la cle API et le modele dans la configuration pour activer ce provider.",
@@ -25,3 +25,4 @@ public sealed class OpenAIProvider : IAIProvider
         return Task.FromResult(response);
     }
 }
+

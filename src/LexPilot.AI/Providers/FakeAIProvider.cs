@@ -12,7 +12,7 @@ public sealed class FakeAIProvider : IAIProvider
 
         var response = new ChatResponse
         {
-            ConversationId = request.ConversationId,
+            
             Answer =
                 "LexPilot Copilot fonctionne actuellement avec le provider Fake. " +
                 $"Message recu : \"{request.Message}\". " +
@@ -30,3 +30,4 @@ public sealed class FakeAIProvider : IAIProvider
         return Task.FromResult(response);
     }
 }
+
