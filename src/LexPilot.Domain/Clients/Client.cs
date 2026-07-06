@@ -1,16 +1,25 @@
-using LexPilot.Domain.Common;
-using LexPilot.Domain.Dossiers;
+﻿using LexPilot.Domain.Dossiers;
 
 namespace LexPilot.Domain.Clients;
 
-public class Client : BaseEntity
+public class Client
 {
-    public string Civilite { get; set; } = string.Empty;
+    public Guid Id { get; set; } = Guid.NewGuid();
+
     public string Nom { get; set; } = string.Empty;
+
     public string Prenom { get; set; } = string.Empty;
-    public string? Societe { get; set; }
-    public string? Email { get; set; }
-    public string? Telephone { get; set; }
-    public string? Adresse { get; set; }
-    public ICollection<Dossier> Dossiers { get; set; } = new List<Dossier>();
+
+    public string Email { get; set; } = string.Empty;
+
+    public string Telephone { get; set; } = string.Empty;
+
+    public DateTime DateCreation { get; set; } = DateTime.UtcNow;
+
+    public bool IsDeleted { get; set; } = false;
+
+    public List<Dossier> Dossiers { get; set; } = new();
 }
+
+
+

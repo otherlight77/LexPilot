@@ -1,4 +1,4 @@
-using LexPilot.Application.Dossiers;
+﻿using LexPilot.Application.Dossiers;
 using LexPilot.Domain.Dossiers;
 using LexPilot.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
@@ -18,8 +18,8 @@ public class DossiersController : ControllerBase
     public async Task<ActionResult<List<DossierDto>>> GetAll(CancellationToken cancellationToken)
     {
         var dossiers = await _db.Dossiers
-            .Where(x => !x.IsDeleted)
-            .OrderByDescending(x => x.CreatedAtUtc)
+            
+            .OrderByDescending(x => x.DateCreation)
             .Select(x => new DossierDto(x.Id, x.Numero, x.Titre, x.Nature, x.Etat, x.Juridiction, x.ClientId))
             .ToListAsync(cancellationToken);
 

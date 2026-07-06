@@ -1,65 +1,56 @@
-﻿using System.Text;
-using LexPilot.Infrastructure;
-using LexPilot.Infrastructure.Data;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using LexPilot.AI;
+using LexPilot.Application.Common.Interfaces;
+using LexPilot.Application;
+using LexPilot.Api.Services.Clients;
+using LexPilot.Infrastructure.Mail;
+using LexPilot.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Host.UseSerilog((context, configuration) => configuration
-    .ReadFrom.Configuration(context.Configuration)
-    .WriteTo.Console());
-
 builder.Services.AddControllers();
+builder.Services.AddApplication();
+builder.Services.AddLexPilotAI();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddInfrastructure(builder.Configuration);
 
-var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("Jwt:Key missing");
-var issuer = builder.Configuration["Jwt:Issuer"];
-var audience = builder.Configuration["Jwt:Audience"];
+builder.Services.AddDbContext<LexPilotDbContext>(options =>
+    options.UseInMemoryDatabase("LexPilotDev"));
 
-builder.Services.AddAuthentication(options =>
+builder.Services.AddScoped<IApplicationDbContext>(provider =>
+    provider.GetRequiredService<LexPilotDbContext>());
+
+builder.Services.Configure<OvhMailSettings>(builder.Configuration.GetSection("OvhMail"));
+builder.Services.AddScoped<OvhMailService>();
+
+builder.Services.AddCors(options =>
 {
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
+    options.AddPolicy("LexPilotCors", policy =>
     {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = issuer,
-        ValidAudience = audience,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
-    };
+        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+    });
 });
 
-builder.Services.AddAuthorization();
+builder.Services.AddScoped<IClientFolderService, ClientFolderService>();
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-app.UseSerilogRequestLogging();
-app.UseAuthentication();
-app.UseAuthorization();
+app.UseCors("LexPilotCors");
 app.MapControllers();
-app.MapGet("/health", () => Results.Ok(new { status = "ok", app = "LexPilot.Api" }));
+
+app.MapGet("/", () => new
+{
+    app = "LexPilot Enterprise",
+    version = "0.1",
+    status = "running"
+});
+
 app.Run();
+
+
+
+
 

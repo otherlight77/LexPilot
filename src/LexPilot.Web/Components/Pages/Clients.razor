@@ -1,0 +1,310 @@
+﻿@page "/clients"
+@rendermode InteractiveServer
+@using LexPilot.Web.Features.Clients.Models
+@using LexPilot.Web.Features.Clients.Services
+@using LexPilot.Web.Services.Notifications
+@inject ClientApiService ClientApiService
+@inject NotificationService NotificationService
+
+<div class="page-header">
+    <div>
+        <h2>Clients</h2>
+        <p>Gestion des clients, coordonnees, dossiers et historique.</p>
+    </div>
+
+    <button class="primary-btn" @onclick="ToggleForm">+ Nouveau client</button>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(NotificationService.Message))
+{
+    <div class="toast @NotificationService.Type">
+        @NotificationService.Message
+        <button @onclick="NotificationService.Clear">X</button>
+    </div>
+}
+
+<div class="client-layout">
+    <section class="panel">
+        <div class="client-toolbar">
+            <input class="client-search" placeholder="Rechercher par nom, prenom, email ou telephone..."
+                   @bind="Search" @bind:event="oninput" />
+
+            <span class="counter">@FilteredClients.Count() client(s)</span>
+        </div>
+
+        @if (ClientItems is null)
+        {
+            <p>Chargement des clients...</p>
+        }
+        else if (!FilteredClients.Any())
+        {
+            <div class="empty-state">
+                <div>👥</div>
+                <strong>Aucun client trouve</strong>
+                <p>Cree ton premier client pour demarrer LexPilot.</p>
+            </div>
+        }
+        else
+        {
+            <div class="client-list">
+                @foreach (var client in FilteredClients)
+                {
+                    <article class="client-card" @onclick="() => SelectClient(client)">
+                        <div class="avatar">@GetInitials(client)</div>
+
+                        <div class="client-card-main">
+                            <strong>@client.Nom @client.Prenom</strong>
+                            <span>@client.Email</span>
+                            <span>@client.Telephone</span>
+                        </div>
+
+                        <div class="client-card-meta">
+                            <span class="status-pill">Actif</span>
+                            <small>0 dossier</small>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+
+    <section class="panel client-detail">
+        @if (SelectedClient is null)
+        {
+            <div class="empty-state">
+                <div>⚖️</div>
+                <strong>Selectionne un client</strong>
+                <p>La fiche client apparaitra ici avec ses dossiers, documents et actions IA.</p>
+            </div>
+        }
+        else
+        {
+            <div class="detail-header">
+                <div class="avatar large">@GetInitials(SelectedClient)</div>
+                <div>
+                    <h3>@SelectedClient.Nom @SelectedClient.Prenom</h3>
+                    <p>Client actif</p>
+                </div>
+            </div>
+
+            <div class="detail-grid">
+                <div>
+                    <label>Email</label>
+                    <strong>@SelectedClient.Email</strong>
+                </div>
+                <div>
+                    <label>Telephone</label>
+                    <strong>@SelectedClient.Telephone</strong>
+                </div>
+                <div>
+                    <label>Dossiers</label>
+                    <strong>0</strong>
+                </div>
+                <div>
+                    <label>Documents</label>
+                    <strong>0</strong>
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <button class="secondary-btn" @onclick="StartEditSelectedClient">Modifier client</button>
+                <button class="secondary-btn">Creer dossier</button>
+                <button class="secondary-btn">Analyser client</button>
+                <button class="danger-btn" @onclick="DeleteSelectedClient">Supprimer client</button>
+            </div>
+        }
+    </section>
+</div>
+
+@if (ShowForm)
+{
+    <div class="modal-backdrop">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Nouveau client</h3>
+                <button @onclick="ToggleForm">X</button>
+            </div>
+
+            <div class="form-grid">
+                <input placeholder="Nom *" @bind="NewClient.Nom" />
+                <input placeholder="Prenom *" @bind="NewClient.Prenom" />
+                <input placeholder="Email" @bind="NewClient.Email" />
+                <input placeholder="Telephone" @bind="NewClient.Telephone" />
+            </div>
+
+            <div class="form-actions">
+                <button class="primary-btn" @onclick="CreateClient">Enregistrer</button>
+                <button class="secondary-btn" @onclick="ToggleForm">Annuler</button>
+            </div>
+        </div>
+    </div>
+}
+
+
+@if (ShowEditForm)
+{
+    <div class="modal-backdrop">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Modifier client</h3>
+                <button @onclick="() => ShowEditForm = false">X</button>
+            </div>
+
+            <div class="form-grid">
+                <input placeholder="Nom *" @bind="EditClient.Nom" />
+                <input placeholder="Prenom *" @bind="EditClient.Prenom" />
+                <input placeholder="Email" @bind="EditClient.Email" />
+                <input placeholder="Telephone" @bind="EditClient.Telephone" />
+            </div>
+
+            <div class="form-actions">
+                <button class="primary-btn" @onclick="SaveEditClient">Enregistrer</button>
+                <button class="secondary-btn" @onclick="() => ShowEditForm = false">Annuler</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<ClientListItemDto>? ClientItems;
+    private ClientListItemDto? SelectedClient;
+    private CreateClientRequest NewClient = new();
+    private UpdateClientRequest EditClient = new();
+    private string Search = string.Empty;
+    private bool ShowForm;
+    private bool ShowEditForm;
+
+    private IEnumerable<ClientListItemDto> FilteredClients =>
+        string.IsNullOrWhiteSpace(Search)
+            ? ClientItems ?? []
+            : (ClientItems ?? []).Where(c =>
+                c.Nom.Contains(Search, StringComparison.OrdinalIgnoreCase) ||
+                c.Prenom.Contains(Search, StringComparison.OrdinalIgnoreCase) ||
+                (c.Email ?? "").Contains(Search, StringComparison.OrdinalIgnoreCase) ||
+                (c.Telephone ?? "").Contains(Search, StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnInitializedAsync()
+    {
+        NotificationService.OnChange += StateHasChanged;
+        await LoadClients();
+    }
+
+    private async Task LoadClients()
+    {
+        try
+        {
+            ClientItems = await ClientApiService.GetClientsAsync();
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Error("Impossible de charger les clients. Verifie que l'API tourne. " + ex.Message);
+        }
+    }
+
+    private void ToggleForm()
+    {
+        ShowForm = !ShowForm;
+        NotificationService.Clear();
+    }
+
+    private void SelectClient(ClientListItemDto client)
+    {
+        SelectedClient = client;
+    }
+
+    private async Task CreateClient()
+    {
+        if (string.IsNullOrWhiteSpace(NewClient.Nom) || string.IsNullOrWhiteSpace(NewClient.Prenom))
+        {
+            NotificationService.Error("Nom et prenom sont obligatoires.");
+            return;
+        }
+
+        var id = await ClientApiService.CreateClientAsync(NewClient);
+
+        if (id is null)
+        {
+            NotificationService.Error("Creation impossible. Verifie l'API.");
+            return;
+        }
+
+        NotificationService.Success("Client cree avec succes.");
+
+        NewClient = new();
+        ShowForm = false;
+        await LoadClients();
+    }
+
+        private void StartEditSelectedClient()
+    {
+        if (SelectedClient is null)
+            return;
+
+        EditClient = new UpdateClientRequest
+        {
+            Id = SelectedClient.Id,
+            Nom = SelectedClient.Nom,
+            Prenom = SelectedClient.Prenom,
+            Email = SelectedClient.Email,
+            Telephone = SelectedClient.Telephone
+        };
+
+        ShowEditForm = true;
+        NotificationService.Clear();
+    }
+
+    private async Task SaveEditClient()
+    {
+        if (string.IsNullOrWhiteSpace(EditClient.Nom) || string.IsNullOrWhiteSpace(EditClient.Prenom))
+        {
+            NotificationService.Error("Nom et prenom sont obligatoires.");
+            return;
+        }
+
+        var ok = await ClientApiService.UpdateClientAsync(EditClient);
+
+        if (!ok)
+        {
+            NotificationService.Error("Modification impossible.");
+            return;
+        }
+
+        NotificationService.Success("Client modifie avec succes.");
+        ShowEditForm = false;
+        await LoadClients();
+
+        SelectedClient = ClientItems?.FirstOrDefault(x => x.Id == EditClient.Id);
+    }
+
+    private async Task DeleteSelectedClient()
+    {
+        if (SelectedClient is null)
+            return;
+
+        var ok = await ClientApiService.DeleteClientAsync(SelectedClient.Id);
+
+        if (!ok)
+        {
+            NotificationService.Error("Suppression impossible.");
+            return;
+        }
+
+        NotificationService.Success("Client supprime.");
+        SelectedClient = null;
+        await LoadClients();
+    }
+
+    private static string GetInitials(ClientListItemDto client)
+    {
+        var first = string.IsNullOrWhiteSpace(client.Nom) ? "" : client.Nom[..1].ToUpperInvariant();
+        var second = string.IsNullOrWhiteSpace(client.Prenom) ? "" : client.Prenom[..1].ToUpperInvariant();
+        return first + second;
+    }
+
+    public void Dispose()
+    {
+        NotificationService.OnChange -= StateHasChanged;
+    }
+}
+
+

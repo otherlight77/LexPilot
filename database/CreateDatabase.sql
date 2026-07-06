@@ -1,0 +1,2 @@
+﻿-- LexPilot SQL bootstrap
+-- Entity Framework sera utilise pour les migrations ensuite.

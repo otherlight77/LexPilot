@@ -1,0 +1,102 @@
+﻿@page "/"
+@inject IHttpClientFactory HttpClientFactory
+
+<div class="dashboard">
+    <div class="hero-card">
+        <div>
+            <h2>Tableau de bord</h2>
+            <p>Vue globale du cabinet, des dossiers et des actions prioritaires.</p>
+        </div>
+        <span class="badge">Connecté API</span>
+    </div>
+
+    @if (Dashboard is null)
+    {
+        <div class="panel">
+            <p>Chargement du tableau de bord...</p>
+        </div>
+    }
+    else
+    {
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span>👥</span>
+                <strong>@Dashboard.Clients</strong>
+                <p>Clients</p>
+            </div>
+            <div class="stat-card">
+                <span>⚖️</span>
+                <strong>@Dashboard.Dossiers</strong>
+                <p>Dossiers</p>
+            </div>
+            <div class="stat-card">
+                <span>📄</span>
+                <strong>@Dashboard.Documents</strong>
+                <p>Documents</p>
+            </div>
+            <div class="stat-card">
+                <span>📧</span>
+                <strong>@Dashboard.Mails</strong>
+                <p>Mails</p>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <section class="panel">
+                <h3>Actions rapides</h3>
+                <ul>
+                    @foreach (var action in Dashboard.ActionsRapides)
+                    {
+                        <li>@action</li>
+                    }
+                </ul>
+            </section>
+
+            <section class="panel">
+                <h3>Alertes</h3>
+                <ul>
+                    @foreach (var alerte in Dashboard.Alertes)
+                    {
+                        <li>@alerte</li>
+                    }
+                </ul>
+            </section>
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <div class="panel error-panel">
+            <strong>Erreur API :</strong> @ErrorMessage
+        </div>
+    }
+</div>
+
+@code {
+    private DashboardDto? Dashboard;
+    private string? ErrorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var client = HttpClientFactory.CreateClient("LexPilotApi");
+            Dashboard = await client.GetFromJsonAsync<DashboardDto>("api/dashboard");
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+
+    private sealed class DashboardDto
+    {
+        public int Clients { get; set; }
+        public int Dossiers { get; set; }
+        public int Documents { get; set; }
+        public int Mails { get; set; }
+        public bool IaActive { get; set; }
+        public string[] Alertes { get; set; } = [];
+        public string[] ActionsRapides { get; set; } = [];
+    }
+}

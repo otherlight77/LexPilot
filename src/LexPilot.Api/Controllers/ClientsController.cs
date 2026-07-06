@@ -1,49 +1,63 @@
-using LexPilot.Application.Clients;
-using LexPilot.Domain.Clients;
-using LexPilot.Infrastructure.Data;
+﻿using LexPilot.Application.Features.Clients.Commands.CreateClient;
+using LexPilot.Application.Features.Clients.Commands.DeleteClient;
+using LexPilot.Application.Features.Clients.Commands.UpdateClient;
+using LexPilot.Application.Features.Clients.Queries.GetClient;
+using LexPilot.Application.Features.Clients.Queries.GetClients;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace LexPilot.Api.Controllers;
 
 [ApiController]
-[Route("api/clients")]
-public class ClientsController : ControllerBase
+[Route("api/[controller]")]
+public sealed class ClientsController : ControllerBase
 {
-    private readonly AppDbContext _db;
+    private readonly IMediator _mediator;
 
-    public ClientsController(AppDbContext db) => _db = db;
+    public ClientsController(IMediator mediator)
+    {
+        _mediator = mediator;
+    }
 
     [HttpGet]
-    public async Task<ActionResult<List<ClientDto>>> GetAll(CancellationToken cancellationToken)
+    public async Task<ActionResult<IReadOnlyList<ClientListItemDto>>> GetClients(CancellationToken cancellationToken)
     {
-        var clients = await _db.Clients
-            .Where(x => !x.IsDeleted)
-            .OrderBy(x => x.Nom)
-            .Select(x => new ClientDto(x.Id, x.Civilite, x.Nom, x.Prenom, x.Societe, x.Email, x.Telephone, x.Adresse))
-            .ToListAsync(cancellationToken);
-
+        var clients = await _mediator.Send(new GetClientsQuery(), cancellationToken);
         return Ok(clients);
     }
 
-    [HttpPost]
-    public async Task<ActionResult<ClientDto>> Create(CreateClientRequest request, CancellationToken cancellationToken)
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<ClientDto>> GetClient(Guid id, CancellationToken cancellationToken)
     {
-        var client = new Client
-        {
-            Civilite = request.Civilite,
-            Nom = request.Nom,
-            Prenom = request.Prenom,
-            Societe = request.Societe,
-            Email = request.Email,
-            Telephone = request.Telephone,
-            Adresse = request.Adresse
-        };
+        var client = await _mediator.Send(new GetClientQuery(id), cancellationToken);
 
-        _db.Clients.Add(client);
-        await _db.SaveChangesAsync(cancellationToken);
+        if (client is null)
+            return NotFound();
 
-        return CreatedAtAction(nameof(GetAll), new { id = client.Id },
-            new ClientDto(client.Id, client.Civilite, client.Nom, client.Prenom, client.Societe, client.Email, client.Telephone, client.Adresse));
+        return Ok(client);
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<Guid>> CreateClient(CreateClientCommand command, CancellationToken cancellationToken)
+    {
+        var id = await _mediator.Send(command, cancellationToken);
+        return CreatedAtAction(nameof(GetClient), new { id }, id);
+    }
+
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> UpdateClient(Guid id, UpdateClientCommand command, CancellationToken cancellationToken)
+    {
+        if (id != command.Id)
+            return BadRequest("L'identifiant de l'URL ne correspond pas a l'identifiant du corps de la requete.");
+
+        await _mediator.Send(command, cancellationToken);
+        return NoContent();
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> DeleteClient(Guid id, CancellationToken cancellationToken)
+    {
+        await _mediator.Send(new DeleteClientCommand(id), cancellationToken);
+        return NoContent();
     }
 }

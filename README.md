@@ -1,51 +1,41 @@
-# LexPilot AI - Sprint 1
+﻿# LexPilot Enterprise V0.1
 
-Socle technique initial pour le logiciel avocat LexPilot AI.
+Socle initial cree automatiquement.
 
-## Contenu
+## Demarrer Docker
 
-- .NET 8 Web API
-- Clean Architecture simplifiee
-- PostgreSQL
-- Entity Framework Core
-- ASP.NET Identity
-- JWT
-- Swagger
-- Serilog
-- Docker Compose
-- Scripts Windows/Linux
+`powershell
+cd C:\Microward\LexPilot\docker
+docker compose up -d
+`
 
-## Demarrage rapide Windows
+## Demarrer API
 
-```powershell
-cd C:\Microward\LexPilot
-Set-ExecutionPolicy -Scope Process Bypass
-.\scripts\install_windows.ps1
-```
+`powershell
+cd C:\Microward\LexPilot\src\LexPilot.Api
+dotnet run
+`
 
-## Demarrage rapide Linux / VPS OVH
+Swagger :
+http://localhost:5128/swagger
 
-```bash
-cd /opt/microward/LexPilot
-chmod +x scripts/install_linux.sh
-./scripts/install_linux.sh
-```
+Health :
+http://localhost:5128/api/health
 
-## Lancer en local
+Dashboard :
+http://localhost:5128/api/dashboard
 
-```bash
-docker compose up -d postgres
-dotnet restore
-dotnet build
-dotnet run --project src/LexPilot.Api
-```
+## Messagerie OVH
 
-Swagger : http://localhost:5128/swagger
+Modifier :
 
-## Connexion PostgreSQL
+C:\Microward\LexPilot\src\LexPilot.Api\appsettings.json
 
-- Host: localhost
-- Port: 5432
-- Database: lexpilot
-- User: lexpilot
-- Password: lexpilot_password
+Remplacer :
+- adresse@avocatpilot.fr
+- MOT_DE_PASSE_OVH_ICI
+
+Endpoints :
+- GET /api/mail/test-ovh
+- GET /api/mail/inbox
+- POST /api/mail/send-test?to=adresse@test.fr

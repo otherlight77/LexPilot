@@ -1,0 +1,105 @@
+﻿@page "/documents"
+@rendermode InteractiveServer
+@using LexPilot.Web.Features.Documents.Models
+@using LexPilot.Web.Features.Documents.Services
+@using Microsoft.AspNetCore.Components.Forms
+@inject DocumentApiService DocumentApiService
+
+<div class="page-header">
+    <div>
+        <h2>Documents</h2>
+        <p>Depot, classement et preparation de l'analyse IA des documents.</p>
+    </div>
+</div>
+
+<div class="panel">
+    <h3>Importer un document</h3>
+    <p>Formats acceptes pour cette V1 : PDF, Word, images. Taille max : 50 Mo.</p>
+
+    <InputFile OnChange="UploadFile" />
+
+    @if (!string.IsNullOrWhiteSpace(Message))
+    {
+        <div class="upload-message">@Message</div>
+    }
+</div>
+
+<div class="panel documents-panel">
+    <h3>Documents importes</h3>
+
+    @if (DocumentItems is null)
+    {
+        <p>Chargement...</p>
+    }
+    else if (!DocumentItems.Any())
+    {
+        <div class="empty-state">
+            <div>📄</div>
+            <strong>Aucun document</strong>
+            <p>Importe un PDF ou un fichier pour demarrer le module Documents.</p>
+        </div>
+    }
+    else
+    {
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Fichier</th>
+                    <th>Type</th>
+                    <th>Taille</th>
+                    <th>Date</th>
+                    <th>IA</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var doc in DocumentItems)
+                {
+                    <tr>
+                        <td>@doc.FileName</td>
+                        <td>@doc.Extension</td>
+                        <td>@FormatSize(doc.Size)</td>
+                        <td>@doc.UploadedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                        <td><span class="status-pill">A analyser</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@code {
+    private List<DocumentItemDto>? DocumentItems;
+    private string? Message;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDocuments();
+    }
+
+    private async Task LoadDocuments()
+    {
+        DocumentItems = await DocumentApiService.GetDocumentsAsync();
+    }
+
+    private async Task UploadFile(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+
+        await using var stream = file.OpenReadStream(maxAllowedSize: 50_000_000);
+
+        var ok = await DocumentApiService.UploadAsync(stream, file.Name);
+
+        Message = ok
+            ? "Document importe avec succes."
+            : "Erreur pendant l'import du document.";
+
+        await LoadDocuments();
+    }
+
+    private static string FormatSize(long size)
+    {
+        if (size < 1024) return size + " o";
+        if (size < 1024 * 1024) return Math.Round(size / 1024d, 1) + " Ko";
+        return Math.Round(size / 1024d / 1024d, 1) + " Mo";
+    }
+}

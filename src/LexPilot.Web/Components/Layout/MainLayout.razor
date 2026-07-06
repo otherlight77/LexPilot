@@ -1,0 +1,59 @@
+﻿@inherits LayoutComponentBase
+
+<div class="lex-shell">
+    <aside class="lex-sidebar">
+        <div class="brand">
+            <div class="brand-logo">LP</div>
+            <div>
+                <div class="brand-title">LexPilot AI</div>
+                <div class="brand-subtitle">Cabinet intelligent</div>
+            </div>
+        </div>
+
+        <nav class="menu">
+            <a class="active" href="/">🏠 Tableau de bord</a>
+            <a href="/clients">👥 Clients</a>
+            <a href="/dossiers">⚖️ Dossiers</a>
+            <a href="/documents">📄 Documents</a>
+            <a href="/mails">📧 Outlook</a>
+            <a href="/agenda">📅 Agenda</a>
+            <a href="/facturation">💰 Facturation</a>
+            <a href="/parametres">⚙️ Paramètres</a>
+        </nav>
+    </aside>
+
+    <main class="lex-main">
+        <header class="topbar">
+            <div>
+                <h1>LexPilot AI</h1>
+                <p>Votre collaborateur numérique pour cabinet d'avocats</p>
+            </div>
+            <input class="search" placeholder="Rechercher client, dossier, document..." />
+        </header>
+
+        <section class="content">
+            @Body
+        </section>
+    </main>
+
+    <aside class="ai-panel">
+        <div class="ai-header">
+            <div class="ai-icon">🤖</div>
+            <div>
+                <strong>Assistant IA</strong>
+                <span>Disponible partout</span>
+            </div>
+        </div>
+
+        <button>Résumer un dossier</button>
+        <button>Générer un courrier</button>
+        <button>Analyser un PDF</button>
+        <button>Répondre à un mail</button>
+        <button>Préparer une audience</button>
+        <button>Rechercher une jurisprudence</button>
+
+        <div class="ai-note">
+            IA non connectée pour le moment. Interface prête pour le module IA.
+        </div>
+    </aside>
+</div>
