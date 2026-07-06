@@ -1,41 +1,25 @@
-﻿# LexPilot Enterprise V0.1
+# LexPilot AI
 
-Socle initial cree automatiquement.
+LexPilot est une plateforme IA pour cabinets d'avocats.
 
-## Demarrer Docker
+Objectif : devenir un collaborateur numerique capable de gerer les clients, dossiers, documents, mails, echeances et analyses IA.
 
-`powershell
-cd C:\Microward\LexPilot\docker
-docker compose up -d
-`
+## Modules actuels
 
-## Demarrer API
+- API .NET
+- Clean Architecture
+- Blazor Web
+- Module Clients
+- Module Documents
+- LexPilot.AI
+- Copilot IA en cours
 
-`powershell
-cd C:\Microward\LexPilot\src\LexPilot.Api
-dotnet run
-`
+## Architecture
 
-Swagger :
-http://localhost:5128/swagger
-
-Health :
-http://localhost:5128/api/health
-
-Dashboard :
-http://localhost:5128/api/dashboard
-
-## Messagerie OVH
-
-Modifier :
-
-C:\Microward\LexPilot\src\LexPilot.Api\appsettings.json
-
-Remplacer :
-- adresse@avocatpilot.fr
-- MOT_DE_PASSE_OVH_ICI
-
-Endpoints :
-- GET /api/mail/test-ovh
-- GET /api/mail/inbox
-- POST /api/mail/send-test?to=adresse@test.fr
+- LexPilot.Api
+- LexPilot.Application
+- LexPilot.Domain
+- LexPilot.Infrastructure
+- LexPilot.Web
+- LexPilot.AI
+- LexPilot.Shared
