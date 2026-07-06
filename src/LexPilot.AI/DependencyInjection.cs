@@ -1,6 +1,7 @@
 using LexPilot.AI.Abstractions;
 using LexPilot.AI.Agents;
 using LexPilot.AI.Configuration;
+using LexPilot.AI.Memory;
 using LexPilot.AI.Pipelines;
 using LexPilot.AI.Providers;
 using LexPilot.AI.Services;
@@ -32,6 +33,11 @@ public static class DependencyInjection
         services.AddScoped<OllamaProvider>();
 
         services.AddScoped<IAIProviderFactory, AIProviderFactory>();
+
+        services.AddSingleton<IConversationMemory, InMemoryConversationMemory>();
+        services.AddScoped<ContextBuilder>();
+        services.AddScoped<PromptBuilder>();
+
         services.AddScoped<ICopilotService, CopilotService>();
 
         return services;
