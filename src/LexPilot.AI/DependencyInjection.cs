@@ -2,6 +2,10 @@ using LexPilot.AI.Abstractions;
 using LexPilot.AI.Agents;
 using LexPilot.AI.Chunking;
 using LexPilot.AI.Configuration;
+using LexPilot.AI.DocumentEngine.Extractors;
+using LexPilot.AI.DocumentEngine.Indexing;
+using LexPilot.AI.DocumentEngine.Interfaces;
+using LexPilot.AI.DocumentEngine.Services;
 using LexPilot.AI.Embeddings;
 using LexPilot.AI.Memory;
 using LexPilot.AI.Pipelines;
@@ -49,6 +53,16 @@ public static class DependencyInjection
         services.AddScoped<IEmbeddingService, DeterministicEmbeddingService>();
         services.AddScoped<ITextChunker, TextChunker>();
         services.AddScoped<IRagService, RagService>();
+
+        services.AddScoped<ITextCleaner, TextCleaner>();
+        services.AddScoped<HashService>();
+        services.AddScoped<MimeDetector>();
+        services.AddScoped<IMetadataExtractor, MetadataExtractor>();
+        services.AddScoped<IDocumentExtractor, PdfExtractor>();
+        services.AddScoped<IDocumentExtractor, WordExtractor>();
+        services.AddScoped<IDocumentExtractor, PlainTextExtractor>();
+        services.AddScoped<IDocumentPipeline, DocumentPipeline>();
+        services.AddScoped<DocumentRagIndexer>();
 
         services.AddScoped<ICopilotService, CopilotService>();
 
