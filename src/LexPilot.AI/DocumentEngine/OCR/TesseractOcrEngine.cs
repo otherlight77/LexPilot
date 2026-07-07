@@ -1,4 +1,5 @@
 using LexPilot.AI.DocumentEngine.Interfaces;
+using Tesseract;
 
 namespace LexPilot.AI.DocumentEngine.OCR;
 
@@ -13,15 +14,22 @@ public sealed class TesseractOcrEngine : IOcrEngine
         if (!File.Exists(imageFile))
             throw new FileNotFoundException(imageFile);
 
-        var fileName = Path.GetFileName(imageFile);
+        var tessDataPath = Path.Combine(AppContext.BaseDirectory, "tessdata");
 
-        var text =
-            "[OCR PLACEHOLDER]" +
-            Environment.NewLine +
-            fileName +
-            Environment.NewLine +
-            "Le moteur OCR est pret. Le branchement Tesseract reel sera ajoute dans le prochain lot.";
+        if (!Directory.Exists(tessDataPath))
+        {
+            return Task.FromResult(
+                "[OCR NON CONFIGURE]\n" +
+                "Dossier tessdata introuvable.\n" +
+                "Chemin attendu : " + tessDataPath);
+        }
 
-        return Task.FromResult(text);
+        using var engine = new TesseractEngine(tessDataPath, "fra+eng", EngineMode.Default);
+        using var image = Pix.LoadFromFile(imageFile);
+        using var page = engine.Process(image);
+
+        var text = page.GetText();
+
+        return Task.FromResult(text ?? string.Empty);
     }
 }
