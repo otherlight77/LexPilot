@@ -3,9 +3,14 @@ using LexPilot.AI.Agents;
 using LexPilot.AI.Chunking;
 using LexPilot.AI.Configuration;
 using LexPilot.AI.DocumentEngine.Extractors;
+using LexPilot.AI.DocumentEngine.Factory;
 using LexPilot.AI.DocumentEngine.Indexing;
 using LexPilot.AI.DocumentEngine.Interfaces;
+using LexPilot.AI.DocumentEngine.OCR;
+using LexPilot.AI.DocumentEngine.Options;
+using LexPilot.AI.DocumentEngine.Queue;
 using LexPilot.AI.DocumentEngine.Services;
+using LexPilot.AI.DocumentEngine.Workers;
 using LexPilot.AI.Embeddings;
 using LexPilot.AI.Memory;
 using LexPilot.AI.Pipelines;
@@ -29,10 +34,12 @@ public static class DependencyInjection
         if (configuration is not null)
         {
             services.Configure<AIProviderOptions>(configuration.GetSection("LexPilotAI"));
+            services.Configure<DocumentOptions>(configuration.GetSection("DocumentEngine"));
         }
         else
         {
             services.Configure<AIProviderOptions>(_ => { });
+            services.Configure<DocumentOptions>(_ => { });
         }
 
         services.AddHttpClient<OpenAIProvider>();
@@ -58,11 +65,26 @@ public static class DependencyInjection
         services.AddScoped<HashService>();
         services.AddScoped<MimeDetector>();
         services.AddScoped<IMetadataExtractor, MetadataExtractor>();
+
+        services.AddScoped<IOcrEngine, TesseractOcrEngine>();
+        services.AddScoped<PdfExtractor>();
+        services.AddScoped<WordExtractor>();
+        services.AddScoped<PlainTextExtractor>();
+        services.AddScoped<ImageExtractor>();
+        services.AddScoped<ScanExtractor>();
+
         services.AddScoped<IDocumentExtractor, PdfExtractor>();
         services.AddScoped<IDocumentExtractor, WordExtractor>();
         services.AddScoped<IDocumentExtractor, PlainTextExtractor>();
+        services.AddScoped<IDocumentExtractor, ImageExtractor>();
+
+        services.AddScoped<IDocumentExtractorFactory, DocumentExtractorFactory>();
         services.AddScoped<IDocumentPipeline, DocumentPipeline>();
         services.AddScoped<DocumentRagIndexer>();
+
+        services.AddSingleton<DocumentQueue>();
+        services.AddScoped<FolderWatcherService>();
+        services.AddScoped<BackgroundDocumentWorker>();
 
         services.AddScoped<ICopilotService, CopilotService>();
 
