@@ -16,19 +16,53 @@ public sealed class DocumentsAiController : ControllerBase
     private readonly DocumentQueue _queue;
     private readonly FolderWatcherService _folderWatcher;
     private readonly BackgroundDocumentWorker _worker;
+    private readonly IWebHostEnvironment _environment;
 
     public DocumentsAiController(
         IDocumentPipeline documentPipeline,
         DocumentRagIndexer ragIndexer,
         DocumentQueue queue,
         FolderWatcherService folderWatcher,
-        BackgroundDocumentWorker worker)
+        BackgroundDocumentWorker worker,
+        IWebHostEnvironment environment)
     {
         _documentPipeline = documentPipeline;
         _ragIndexer = ragIndexer;
         _queue = queue;
         _folderWatcher = folderWatcher;
         _worker = worker;
+        _environment = environment;
+    }
+
+    [HttpPost("upload")]
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<DocumentAnalysisResult>> Upload(
+        IFormFile file,
+        [FromForm] bool indexInRag = true,
+        CancellationToken cancellationToken = default)
+    {
+        if (file.Length <= 0)
+            return BadRequest("Fichier vide.");
+
+        var importFolder = Path.Combine(_environment.ContentRootPath, "Storage", "Imports");
+        Directory.CreateDirectory(importFolder);
+
+        var safeName = Path.GetFileName(file.FileName);
+        var storedName = $"{DateTime.UtcNow:yyyyMMddHHmmssfff}_{safeName}";
+        var filePath = Path.Combine(importFolder, storedName);
+
+        await using (var stream = System.IO.File.Create(filePath))
+        {
+            await file.CopyToAsync(stream, cancellationToken);
+        }
+
+        var document = await _documentPipeline.AnalyzeAsync(filePath, cancellationToken);
+
+        var indexedChunks = indexInRag
+            ? await _ragIndexer.IndexAsync(document, cancellationToken)
+            : 0;
+
+        return Ok(ToResult(document, indexedChunks));
     }
 
     [HttpPost("analyze-path")]
